@@ -1,0 +1,11 @@
+[build]
+  command = "pnpm build"
+  publish = "dist"
+
+# SPA fallback so deep links route through index.html
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+
