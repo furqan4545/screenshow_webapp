@@ -54,11 +54,25 @@ function pickPriceId(priceKey: Body['priceKey'], isDev: boolean): string {
 }
 
 async function getOrCreateCustomer(admin: ReturnType<typeof createClient>, userId: string, email?: string) {
-  const { data: row } = await admin.from('customers').select('stripe_customer_id').eq('user_id', userId).maybeSingle()
-  if (row?.stripe_customer_id) return row.stripe_customer_id as string
+  const { data: row } = await admin
+    .from('customers')
+    .select('stripe_customer_id')
+    .eq('user_id', userId)
+    .maybeSingle()
+
+  // If we already have a customer id stored, verify it exists in the current Stripe mode
+  if (row?.stripe_customer_id) {
+    try {
+      const existing = await stripe.customers.retrieve(row.stripe_customer_id as string)
+      if ((existing as any)?.id) return row.stripe_customer_id as string
+    } catch {
+      // The stored id likely belongs to the other environment (test vs live).
+      // Fall through to create a fresh customer in the current environment and update DB.
+    }
+  }
 
   const customer = await stripe.customers.create({ email, metadata: { user_id: userId } })
-  await admin.from('customers').insert({ user_id: userId, stripe_customer_id: customer.id })
+  await admin.from('customers').upsert({ user_id: userId, stripe_customer_id: customer.id }, { onConflict: 'user_id' })
   return customer.id
 }
 

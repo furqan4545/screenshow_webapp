@@ -72,7 +72,15 @@ Deno.serve(async (req) => {
     // Admin client (service role) to write to DB
     const admin = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY)
 
-    // Idempotency: if user already has a secret, return 409 with preview only
+    const { force } = (await (async () => {
+      try {
+        return await req.json()
+      } catch {
+        return { force: false }
+      }
+    })()) as { force?: boolean }
+
+    // Idempotency: if user already has a secret, return preview unless force=true
     const { data: existing, error: existingErr } = await admin
       .from('user_secrets')
       .select('id,last4')
@@ -84,11 +92,15 @@ Deno.serve(async (req) => {
       console.error('Query error', existingErr)
       return new Response('Database error', { status: 500, headers: corsHeaders })
     }
-    if (existing) {
+    if (existing && !force) {
       return new Response(
         JSON.stringify({ created: false, preview: `••••${existing.last4}` }),
         { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders } },
       )
+    }
+
+    if (existing && force) {
+      await admin.from('user_secrets').delete().eq('user_id', user.id)
     }
 
     // Generate secret: 32 bytes url-safe + prefix

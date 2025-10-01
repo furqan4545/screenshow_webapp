@@ -78,6 +78,7 @@ function Dashboard() {
               Authorization: `Bearer ${sessionData.session?.access_token ?? ''}`,
               'Content-Type': 'application/json',
             },
+            body: JSON.stringify({ force: true }),
           },
         )
         const json = await res.json().catch(() => ({}))
