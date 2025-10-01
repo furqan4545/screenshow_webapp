@@ -32,17 +32,11 @@ function Dashboard() {
 
   useEffect(() => {
     if (!user?.id) return
+    // Only show secret for paid plans; free users see empty with CTA
     const storageKey = `user-secret-${user.id}`
-    let existing = localStorage.getItem(storageKey) || ''
-    if (!existing) {
-      const random = Array.from(crypto.getRandomValues(new Uint8Array(16)))
-        .map((b) => b.toString(16).padStart(2, '0'))
-        .join('')
-      existing = `sk_live_${random}`
-      localStorage.setItem(storageKey, existing)
-    }
+    const existing = localStorage.getItem(storageKey) || ''
     setSecret(existing)
-  }, [user?.id])
+  }, [user?.id, plan])
 
   useEffect(() => {
     const fetchPlan = async () => {
@@ -57,8 +51,40 @@ function Dashboard() {
     if (user?.id) void fetchPlan()
   }, [user?.id])
 
+  // After purchase: if paid plan and no local secret, request one
+  useEffect(() => {
+    const maybeGenerate = async () => {
+      if (!user?.id) return
+      if (plan === 'free') return
+      const storageKey = `user-secret-${user.id}`
+      const existing = localStorage.getItem(storageKey)
+      if (existing) return
+      const { data: sessionData } = await supabase.auth.getSession()
+      try {
+        const res = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-secret`,
+          {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${sessionData.session?.access_token ?? ''}`,
+              'Content-Type': 'application/json',
+            },
+          },
+        )
+        const json = await res.json().catch(() => ({}))
+        if (json?.secret) {
+          localStorage.setItem(storageKey, json.secret as string)
+          setSecret(json.secret as string)
+        }
+      } catch {
+        // ignore
+      }
+    }
+    void maybeGenerate()
+  }, [plan, user?.id])
+
   const maskedSecret = useMemo(() => {
-    if (!secret) return '—'
+    if (!secret) return ''
     const tail = secret.slice(-6)
     return `••••••••••••••••${tail}`
   }, [secret])
@@ -141,28 +167,34 @@ function Dashboard() {
 
                   <div>
                     <label className="mb-1 block text-xs text-white/60">Secret key</label>
-                    <div className="flex items-stretch gap-2">
-                      <input
-                        readOnly
-                        value={maskedSecret}
-                        className="flex-1 rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm outline-none"
-                      />
-                      <button
-                        onClick={async () => {
-                          if (!secret) return
-                          await navigator.clipboard.writeText(secret)
-                          setCopied({ email: false, secret: true })
-                          setTimeout(() => setCopied({ email: false, secret: false }), 1200)
-                        }}
-                        className="cursor-pointer rounded-lg border border-white/10 px-3 py-2 text-sm text-white/90 hover:bg-white/[0.06]"
-                      >
-                        {copied.secret ? (
-                          <span className="text-green-400">✓ Copied</span>
-                        ) : (
-                          'Copy'
-                        )}
-                      </button>
-                    </div>
+                    {plan === 'free' ? (
+                      <div className="rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-white/60">
+                        Please buy a plan to get a secret key.
+                      </div>
+                    ) : (
+                      <div className="flex items-stretch gap-2">
+                        <input
+                          readOnly
+                          value={maskedSecret}
+                          className="flex-1 rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm outline-none"
+                        />
+                        <button
+                          onClick={async () => {
+                            if (!secret) return
+                            await navigator.clipboard.writeText(secret)
+                            setCopied({ email: false, secret: true })
+                            setTimeout(() => setCopied({ email: false, secret: false }), 1200)
+                          }}
+                          className="cursor-pointer rounded-lg border border-white/10 px-3 py-2 text-sm text-white/90 hover:bg-white/[0.06]"
+                        >
+                          {copied.secret ? (
+                            <span className="text-green-400">✓ Copied</span>
+                          ) : (
+                            'Copy'
+                          )}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

@@ -23,11 +23,17 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
   const sig = req.headers.get('stripe-signature')
+  if (!sig) {
+    return new Response('Missing stripe-signature', { status: 400, headers: corsHeaders })
+  }
   const raw = await req.text()
   let event: Stripe.Event
   try {
-    event = stripe.webhooks.constructEvent(raw, sig ?? '', env.STRIPE_WEBHOOK_SECRET)
+    // Use async verifier (works reliably on Deno/Supabase edge runtime)
+    // @ts-ignore - constructEventAsync available in stripe v14+
+    event = await stripe.webhooks.constructEventAsync(raw, sig, env.STRIPE_WEBHOOK_SECRET)
   } catch (err) {
+    console.error('webhook verify failed', err)
     return new Response('Invalid signature', { status: 400, headers: corsHeaders })
   }
 

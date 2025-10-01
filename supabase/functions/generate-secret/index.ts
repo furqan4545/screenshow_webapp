@@ -86,8 +86,8 @@ Deno.serve(async (req) => {
     }
     if (existing) {
       return new Response(
-        JSON.stringify({ alreadyExists: true, preview: `••••${existing.last4}` }),
-        { status: 409, headers: { 'Content-Type': 'application/json', ...corsHeaders } },
+        JSON.stringify({ created: false, preview: `••••${existing.last4}` }),
+        { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders } },
       )
     }
 
@@ -110,7 +110,7 @@ Deno.serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ secret, preview: `••••${last6}` }),
+      JSON.stringify({ created: true, secret, preview: `••••${last6}` }),
       { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders } },
     )
   } catch (e) {

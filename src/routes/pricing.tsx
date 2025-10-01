@@ -137,8 +137,14 @@ function PricingCard({
           }),
         },
       )
-      const json = await res.json()
-      if (json?.url) window.location.assign(json.url)
+      const text = await res.text()
+      try {
+        const json = JSON.parse(text)
+        if (json?.url) window.location.assign(json.url)
+        else if (json?.error) alert(json.error)
+      } catch {
+        alert(text)
+      }
     } catch (e) {
       // eslint-disable-next-line no-console
       console.error(e)

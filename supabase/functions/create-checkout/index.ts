@@ -76,6 +76,12 @@ Deno.serve(async (req) => {
     const body = (await req.json()) as Body
     const isDev = (body.successUrl ?? '').includes('localhost')
     const priceId = pickPriceId(body.priceKey, isDev)
+    if (!priceId) {
+      return new Response(
+        JSON.stringify({ error: `Missing price ID for ${body.priceKey} (${isDev ? 'DEV' : 'PROD'})` }),
+        { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } },
+      )
+    }
     const mode = body.priceKey === 'lifetime' ? 'payment' : 'subscription'
     const successUrl = body.successUrl || `${isDev ? 'http://localhost:3000' : 'https://screenshow.app'}/dashboard`
     const cancelUrl = body.cancelUrl || (isDev ? 'http://localhost:3000/pricing' : 'https://screenshow.app/pricing')
@@ -95,9 +101,13 @@ Deno.serve(async (req) => {
     })
 
     return new Response(JSON.stringify({ url: session.url }), { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders } })
-  } catch (e) {
-    console.error(e)
-    return new Response('Internal error', { status: 500, headers: corsHeaders })
+  } catch (e: any) {
+    console.error('create-checkout error', e)
+    const message = typeof e?.message === 'string' ? e.message : 'Internal error'
+    return new Response(
+      JSON.stringify({ error: message }),
+      { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } },
+    )
   }
 })
 
