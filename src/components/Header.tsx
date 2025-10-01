@@ -47,15 +47,11 @@ export default function Header() {
             >
         {/* Brand */}
         <Link to="/" className="flex items-center gap-2">
-          <span
-            className={[
-              'grid place-items-center rounded-md bg-gradient-to-br from-blue-500 to-indigo-600 text-white',
-              'transition-all duration-300',
-              isScrolled ? 'h-7 w-7 text-xs' : 'h-9 w-9 text-sm',
-            ].join(' ')}
-          >
-            SA
-          </span>
+          <img
+            src="/LOGO_LARGE.png"
+            alt="Screenshow logo"
+            className={[ 'rounded-md object-contain', isScrolled ? 'h-7 w-7' : 'h-9 w-9' ].join(' ')}
+          />
           <span
             className={[
               'font-semibold tracking-tight text-white',
@@ -63,7 +59,7 @@ export default function Header() {
               isScrolled ? 'text-base' : 'text-xl',
             ].join(' ')}
           >
-            SkyAgent
+            Screenshow
           </span>
         </Link>
 

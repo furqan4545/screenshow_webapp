@@ -118,8 +118,11 @@ function PricingCard({
   features: string[]
   highlight?: boolean
 }) {
+  const [loading, setLoading] = useState(false)
+
   const onCheckout = async (priceKey: 'pro_month' | 'pro_year' | 'lifetime' | 'enterprise_month') => {
     try {
+      setLoading(true)
       const { data: { session } } = await supabase.auth.getSession()
       const isDev = window.location.origin.includes('localhost')
       const res = await fetch(
@@ -148,6 +151,8 @@ function PricingCard({
     } catch (e) {
       // eslint-disable-next-line no-console
       console.error(e)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -173,9 +178,10 @@ function PricingCard({
       <div className="mt-auto pt-6">
         <button
           onClick={() => onCheckout(title.includes('Enterprise') ? 'enterprise_month' : title.includes('Lifetime') ? 'lifetime' : (badge === 'Yearly' ? 'pro_year' : 'pro_month'))}
-          className="w-full cursor-pointer rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium hover:bg-indigo-500"
+          className="w-full cursor-pointer rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium hover:bg-indigo-500 disabled:opacity-60 disabled:cursor-not-allowed"
+          disabled={loading}
         >
-          Get Started
+          {loading ? 'Preparing checkout…' : 'Get Started'}
         </button>
       </div>
     </div>
