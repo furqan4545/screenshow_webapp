@@ -74,10 +74,10 @@ export default function Header() {
           <Link to="/" className="text-white/80 hover:text-white transition-colors">
             Home
           </Link>
-          <a href="#how" className="text-white/80 hover:text-white transition-colors">
+          <a href="/how" className="text-white/80 hover:text-white transition-colors">
             How it Works
           </a>
-          <a href="#features" className="text-white/80 hover:text-white transition-colors">
+          <a href="/features" className="text-white/80 hover:text-white transition-colors">
             Features
           </a>
           <a href="/pricing" className="text-white/80 hover:text-white transition-colors">

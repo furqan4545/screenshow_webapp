@@ -1,5 +1,6 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { supabase } from '../lib/supabaseClient'
+import { useAuth } from '../context/AuthProvider'
 
 export const Route = createFileRoute('/')({
   beforeLoad: async () => {
@@ -13,6 +14,7 @@ export const Route = createFileRoute('/')({
 })
 
 function App() {
+  const { signInWithGoogle } = useAuth()
   return (
     <main className="relative overflow-hidden bg-[#0b0d12] text-white">
       {/* Glow background */}
@@ -21,20 +23,19 @@ function App() {
       <section className="mx-auto flex min-h-[78vh] w-full max-w-6xl flex-col items-center justify-center px-4 sm:px-6 text-center gap-6">
         <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm text-white/80">
           <span className="inline-block h-2 w-2 rounded-full bg-blue-500" />
-          Introducing custom automations
+          Introducing next gen screen recorder
         </div>
         <h1 className="max-w-4xl text-balance text-4xl font-semibold tracking-tight sm:text-6xl">
-          Meet your AI Agent
+          <span className="text-white/90">Break the status quo,</span>
           <br />
-          <span className="text-white/80">Streamline your workflow</span>
+          <span className="text-white/80">Turn dull demos into dazzle</span>
         </h1>
         <p className="max-w-2xl text-white/70">
-          AI assistant designed to streamline your digital workflows and handle mundane
-          tasks, so you can focus on what truly matters.
+          Ever watch a screen recording and yawn? Yeah, me too. But ScreenShow fixes that. Don't believe me? download and try yourself. It's the future of screen recorded videos.
         </p>
         <div className="flex items-center gap-3">
-          <a href="#try" className="rounded-full bg-blue-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-blue-500">Try for Free</a>
-          <a href="#login" className="rounded-full border border-white/15 px-5 py-2.5 text-sm font-medium text-white/90 hover:bg-white/5">Log in</a>
+          <a href="/download" className="rounded-full bg-blue-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-blue-500">Download</a>
+          <button onClick={() => void signInWithGoogle()} className="rounded-full border border-white/15 px-5 py-2.5 text-sm font-medium text-white/90 hover:bg-white/5">Log in</button>
         </div>
       </section>
 
@@ -63,25 +64,10 @@ function App() {
       {/* Trusted by section */}
       <section className="relative mx-auto mb-28 w-full max-w-6xl px-4 sm:px-6 text-center">
         <p className="mb-8 text-sm text-white/60">Trusted by fast‑growing startups</p>
-        <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
-          <div className="mx-auto grid w-max grid-cols-2 gap-6 sm:grid-cols-4">
-            {[
-              'OpenAI',
-              'Retool',
-              'Stripe',
-              'Wise',
-              'Loom',
-              'Medium',
-              'Cash App',
-              'Linear',
-            ].map((brand) => (
-              <div
-                key={brand}
-                className="flex items-center justify-center rounded-xl border border-white/5 bg-black/20 px-4 py-6 text-white/80"
-              >
-                <span className="text-lg sm:text-xl">{brand}</span>
-              </div>
-            ))}
+        <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-8">
+          <div className="flex flex-col items-center gap-3 text-white/80">
+            <div className="text-5xl">😭</div>
+            <p>They haven't provided me their logo yet, it will be updated in next 48 hours.</p>
           </div>
         </div>
       </section>

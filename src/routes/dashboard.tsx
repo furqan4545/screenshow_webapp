@@ -17,6 +17,8 @@ export const Route = createFileRoute('/dashboard')({
 function Dashboard() {
   const { user } = useAuth()
   const [plan, setPlan] = useState<string>('free')
+  const [purchaseAt, setPurchaseAt] = useState<string>('')
+  const [renewAt, setRenewAt] = useState<string | null>(null)
   const [active, setActive] = useState<'secret' | 'billing'>('secret')
   const [secret, setSecret] = useState<string>('')
   const [copied, setCopied] = useState<{ email: boolean; secret: boolean }>({
@@ -42,11 +44,18 @@ function Dashboard() {
     const fetchPlan = async () => {
       const { data } = await supabase
         .from('subscriptions')
-        .select('plan,status')
+        .select('plan,status,current_period_end,created_at')
         .eq('user_id', user?.id)
         .maybeSingle()
-      if (data?.plan && data.status !== 'canceled') setPlan(data.plan)
-      else setPlan('free')
+      if (data?.plan && data.status !== 'canceled') {
+        setPlan(data.plan)
+        setPurchaseAt(data.created_at ?? '')
+        setRenewAt(data.current_period_end ?? null)
+      } else {
+        setPlan('free')
+        setPurchaseAt('')
+        setRenewAt(null)
+      }
     }
     if (user?.id) void fetchPlan()
   }, [user?.id])
@@ -199,10 +208,28 @@ function Dashboard() {
                 </div>
               </div>
             ) : (
-              <div>
-                <h2 className="mb-2 text-lg font-semibold">Billing</h2>
-                <p className="text-sm text-white/70">Manage your subscription and invoices here once connected to Stripe.</p>
-                <p className="mt-3 text-sm text-white/60">To view plans, visit the <a className="text-indigo-400 hover:underline" href="/pricing">pricing page</a>.</p>
+              <div className="space-y-4">
+                <h2 className="text-lg font-semibold">Billing</h2>
+                <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4">
+                  <div className="mb-3 grid grid-cols-2 gap-2 text-sm">
+                    <span className="text-white/60">Plan</span>
+                    <span className="text-white/90">
+                      {plan === 'free' && 'Free'}
+                      {plan === 'pro_month' && 'Pro (Monthly)'}
+                      {plan === 'pro_year' && 'Pro (Yearly)'}
+                      {plan === 'enterprise_month' && 'Enterprise'}
+                      {plan === 'lifetime' && 'Lifetime'}
+                    </span>
+                    <span className="text-white/60">Purchase date</span>
+                    <span className="text-white/90">{purchaseAt ? new Date(purchaseAt).toLocaleDateString() : '—'}</span>
+                    <span className="text-white/60">Renewal date</span>
+                    <span className="text-white/90">{plan === 'lifetime' ? 'No renewal' : (renewAt ? new Date(renewAt).toLocaleDateString() : '—')}</span>
+                  </div>
+                  <p className="text-xs text-white/60">
+                    To change or upgrade your plan, visit the{' '}
+                    <a href="/pricing" className="text-indigo-400 hover:underline">pricing page</a>.
+                  </p>
+                </div>
               </div>
             )}
           </div>
